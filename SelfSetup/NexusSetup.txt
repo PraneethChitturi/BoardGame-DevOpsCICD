@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Update package manager repositories
+sudo apt-get update
+
+# Install necessary dependencies
+sudo apt-get install -y ca-certificates curl
+
+# Create directory for Docker GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+
+# Download Docker's GPG key
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+
+# Ensure proper permissions for the key
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add Docker repository to Apt sources
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+$(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update package manager repositories
+sudo apt-get update
+
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin 
+
+#By Default..only root user has access to run docker commands
+#To let all access
+sudo chmod 666 /var/run/docker.sock
+
+#Pull/run nexus container from image
+docker run -d --name Nexus -p 8081:8081 sonatype/nexus3
+
+#verify
+docker ps
+
+#go to server public ip address and port by pasting to web
+#default admin/password its stored in nexus files
+#executable terminal in docker to communicate with container in bash terminal fashion
+docker exec -it c216d9787135 /bin/bash
+cd sonatype-work/
+ls
+cd nexus3/ #in thsi you will find admin.password file
+cat admin.password #cat to open the file and copy password
+exit
