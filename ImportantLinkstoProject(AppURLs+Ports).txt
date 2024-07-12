@@ -1,0 +1,10 @@
+Jenkins -> http://54.190.26.192:8080/
+Nexus -> http://35.87.17.197:8081
+SonarQube -> http://35.88.196.230:9000/projects
+Prometheus -> http://34.222.29.93:9090/
+Graphana -> http://34.222.29.93:3000/
+NodeExporter -> http://54.190.26.192:9100/
+BlackBoxExporter -> http://34.222.29.93:9115/
+
+MainApp-> http://35.164.102.224:32322/
+Github -> https://github.com/PraneethChitturi/BoardGame-DevOpsCICD
