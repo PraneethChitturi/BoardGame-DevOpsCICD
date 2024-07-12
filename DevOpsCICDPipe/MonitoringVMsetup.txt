@@ -1,0 +1,121 @@
+#Create VM in AWS
+sudo apt update
+
+#Install prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.53.1/prometheus-2.53.1.linux-amd64.tar.gz
+
+#Extract 
+tar -xvf prometheus-2.53.1.linux-amd64.tar.gz
+
+#Remvoe tar file
+rm -rf prometheus-2.53.1.linux-amd64.tar.gz
+
+#Goto
+cd prometheus-2.53.1.linux-amd64/
+
+
+#Run in background
+./prometheus &
+
+#Runs on default port 9090
+
+#Go to prev directory to install graphana
+sudo apt-get install -y adduser libfontconfig1 musl
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise_11.1.0_amd64.deb
+sudo dpkg -i grafana-enterprise_11.1.0_amd64.deb
+
+#Start grapha serve by 
+sudo /bin/systemctl start grafana-server
+#By default running on port 3000
+
+
+#Install blackboxexported
+wget https://github.com/prometheus/blackbox_exporter/releases/download/v0.25.0/blackbox_exporter-0.25.0.linux-amd64.tar.gz
+tar -xvf blackbox_exporter-0.25.0.linux-amd64.tar.gz
+rm -rf blackbox_exporter-0.25.0.linux-amd64.tar.gz
+cd blackbox_exporter-0.25.0.linux-amd64/
+./blackbox_exporter &
+#Runs on default port 9115
+
+
+#Add to promethrous.yaml file replacing 'targets' with sites u want to monitor and IP address of VM
+scrape_configs:
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+        - http://prometheus.io    # Target to probe with http.
+        - http://35.164.102.224:32322
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115  # The blackbox exporter's real hostname:port.
+  - job_name: 'blackbox_exporter'  # collect blackbox exporter's operational metrics.
+    static_configs:
+      - targets: 34.222.29.93:9115
+
+
+
+#By
+cd prometheus-2.53.1.linux-amd64/
+vi prometheus.yml
+#copy paste scrape_configs
+#save :wq
+
+
+#restart prometheus
+pgrep prometheus
+#from above u will get process id
+kill {processid}
+
+
+#Start server again
+./prometheus &
+
+
+#Add prometheus as datasource to graphana
+#Graphana portal -> connections -> add data source -> prometheus -> connection : (url) -> save & test
+#Graphana portal -> Import dashboard -> choose dashboard u like -> copy id/download json -> paste it in import dashboard -> Datasource: Prometheus defined above
+#Dashboard i reading monitoring http traffic
+
+#to monitor system level - install prometheus plugin in jenkins
+#restart jenkins on portal
+
+#install nodeexporter on jenkins server
+wget https://github.com/prometheus/node_exporter/releases/download/v1.8.1/node_exporter-1.8.1.linux-amd64.tar.gz
+tar -xvf node_exporter-1.8.1.linux-amd64.tar.gz
+cd node_exporter-1.8.1.linux-amd64/
+#Start server
+./node_exporter &
+#Runs on 9100
+
+
+#Add nodexported to prometheus in monitor sevrer prometheus.yml file
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['54.190.26.192:9100']
+
+  - job_name: 'jenkins'
+    metrics_path: '/prometheus'
+    static_configs:
+      - targets: ['54.190.26.192:8080']
+
+#restart prometheus
+pgrep prometheus
+#from above u will get process id
+kill {processid}
+
+
+#Start server again
+./prometheus &
+
+#now these should be again visible in prometheus portal
+#create another dashboard in graphana with these new nodexporter dashboards available online
+
